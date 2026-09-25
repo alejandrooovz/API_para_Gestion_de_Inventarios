@@ -1,26 +1,31 @@
 # API para Gestión de Inventarios
 
-Proyecto desarrollado en Java con Spring Boot para la gestión de inventarios.
+Proyecto académico desarrollado en Java con Spring Boot para la gestión de inventarios.
 
-La API permite administrar productos mediante operaciones CRUD y está preparada para integrarse con otros módulos del sistema, como proveedores y movimientos de inventario.
+La API permite administrar productos mediante operaciones CRUD y está preparada para integrarse con otros módulos del sistema, como proveedores, relaciones producto-proveedor y movimientos de inventario.
 
 ---
 
 ## Tecnologías utilizadas
 
 - Java 21
-- Spring Boot
+- Spring Boot 4.1.1
 - Spring Data JPA
 - Spring Validation
 - PostgreSQL
+- H2 para pruebas
 - Maven
 - Lombok
+- JUnit
+- Mockito
 - Docker
 - Git
+- GitHub
 - GitHub Actions
 - act
 - Postman
 - IntelliJ IDEA
+- PlantUML
 
 ---
 
@@ -42,20 +47,31 @@ Estructura principal:
 
 ```text
 src
-└── main
+├── main
+│   ├── java
+│   │   └── sv
+│   │       └── ues
+│   │           └── inventarioapi
+│   │               ├── controller
+│   │               ├── exception
+│   │               ├── model
+│   │               ├── repository
+│   │               ├── service
+│   │               │   └── impl
+│   │               └── ApiParaGestionDeInventariosApplication.java
+│   └── resources
+│       └── application.properties
+│
+└── test
     ├── java
     │   └── sv
     │       └── ues
     │           └── inventarioapi
-    │               ├── controller
-    │               ├── exception
-    │               ├── model
-    │               ├── repository
-    │               ├── service
-    │               │   └── impl
-    │               └── ApiParaGestionDeInventariosApplication.java
+    │               ├── ApiParaGestionDeInventariosApplicationTests.java
+    │               └── service
+    │                   └── ProductoServiceImplTest.java
     └── resources
-        └── application.properties
+        └── application-test.properties
 ```
 
 ---
@@ -74,8 +90,6 @@ descripcion
 precio
 cantidadStock
 ```
-
----
 
 ## Validaciones de Producto
 
@@ -106,42 +120,11 @@ http://localhost:8080/api/productos
 GET /api/productos
 ```
 
-Ejemplo:
-
-```text
-GET http://localhost:8080/api/productos
-```
-
-Respuesta esperada:
-
-```json
-[
-  {
-    "id": 1,
-    "codigo": "PROD-001",
-    "nombre": "Producto de ejemplo",
-    "descripcion": "Descripción del producto",
-    "precio": 10.50,
-    "cantidadStock": 15
-  }
-]
-```
-
----
-
 ## Obtener producto por ID
 
 ```http
 GET /api/productos/{id}
 ```
-
-Ejemplo:
-
-```text
-GET http://localhost:8080/api/productos/1
-```
-
----
 
 ## Crear producto
 
@@ -149,7 +132,7 @@ GET http://localhost:8080/api/productos/1
 POST /api/productos
 ```
 
-Ejemplo de cuerpo JSON:
+Ejemplo:
 
 ```json
 {
@@ -167,30 +150,10 @@ Respuesta esperada:
 201 Created
 ```
 
----
-
 ## Actualizar producto
 
 ```http
 PUT /api/productos/{id}
-```
-
-Ejemplo:
-
-```text
-PUT http://localhost:8080/api/productos/1
-```
-
-Cuerpo:
-
-```json
-{
-  "codigo": "PROD-001",
-  "nombre": "Producto actualizado",
-  "descripcion": "Descripción actualizada",
-  "precio": 15.99,
-  "cantidadStock": 20
-}
 ```
 
 Respuesta esperada:
@@ -199,18 +162,10 @@ Respuesta esperada:
 200 OK
 ```
 
----
-
 ## Eliminar producto
 
 ```http
 DELETE /api/productos/{id}
-```
-
-Ejemplo:
-
-```text
-DELETE http://localhost:8080/api/productos/1
 ```
 
 Respuesta esperada:
@@ -225,96 +180,37 @@ Respuesta esperada:
 
 El proyecto utiliza manejo global de excepciones mediante `@ControllerAdvice`.
 
-Se manejan errores como:
+Se manejan:
 
 - Producto no encontrado.
 - Código de producto duplicado.
 - Datos inválidos.
 - Validaciones de campos.
 
----
-
-## Producto no encontrado
-
-Ejemplo:
-
-```text
-GET /api/productos/999
-```
-
-Respuesta:
-
-```json
-{
-  "timestamp": "2026-09-25T10:00:00",
-  "status": 404,
-  "error": "Not Found",
-  "mensaje": "Producto no encontrado con id: 999"
-}
-```
-
----
-
-## Código de producto duplicado
-
-Respuesta:
-
-```json
-{
-  "timestamp": "2026-09-25T10:00:00",
-  "status": 409,
-  "error": "Conflict",
-  "mensaje": "Ya existe un producto con el código: PROD-001"
-}
-```
-
----
-
-## Error de validación
-
-Ejemplo de datos inválidos:
-
-```json
-{
-  "codigo": "",
-  "nombre": "",
-  "descripcion": "Producto inválido",
-  "precio": -20,
-  "cantidadStock": -5
-}
-```
-
-La API responde con:
+Códigos principales:
 
 ```text
 400 Bad Request
+404 Not Found
+409 Conflict
 ```
 
 ---
 
 # Base de datos
 
-El proyecto utiliza PostgreSQL.
-
-Base de datos utilizada:
+El proyecto utiliza PostgreSQL como base de datos principal.
 
 ```text
-inventario_db
-```
-
-Puerto predeterminado:
-
-```text
-5432
+Base de datos: inventario_db
+Puerto: 5432
 ```
 
 ---
 
 # Variables de entorno
 
-Las credenciales de PostgreSQL no se almacenan directamente en el código fuente.
-
-La aplicación utiliza las siguientes variables de entorno:
+La aplicación utiliza:
 
 ```text
 DB_URL
@@ -332,9 +228,7 @@ DB_PASSWORD=TU_CONTRASEÑA
 
 No se recomienda guardar contraseñas reales dentro del repositorio.
 
----
-
-## Configuración de application.properties
+## application.properties
 
 ```properties
 spring.application.name=inventario-api
@@ -352,18 +246,9 @@ spring.jpa.properties.hibernate.format_sql=true
 
 # Ejecución local
 
-## Requisitos
+## Desde IntelliJ IDEA
 
-- Java 21
-- PostgreSQL
-- Maven Wrapper incluido en el proyecto
-
----
-
-## Ejecutar desde IntelliJ IDEA
-
-1. Abrir el proyecto en IntelliJ IDEA.
-2. Configurar las variables de entorno:
+Configurar:
 
 ```text
 DB_URL
@@ -371,29 +256,21 @@ DB_USERNAME
 DB_PASSWORD
 ```
 
-3. Ejecutar:
+y ejecutar:
 
 ```text
 ApiParaGestionDeInventariosApplication.java
 ```
 
-La aplicación estará disponible en:
+## Con Maven
 
-```text
-http://localhost:8080
-```
-
----
-
-## Ejecutar con Maven
-
-En Windows:
+Windows:
 
 ```powershell
 .\mvnw spring-boot:run
 ```
 
-En Linux:
+Linux:
 
 ```bash
 ./mvnw spring-boot:run
@@ -401,41 +278,82 @@ En Linux:
 
 ---
 
+# Pruebas automáticas
+
+El proyecto incluye:
+
+- 8 pruebas unitarias para `ProductoServiceImpl`.
+- 1 prueba de carga del contexto de Spring Boot.
+- Total: 9 pruebas automatizadas.
+
+Las pruebas unitarias utilizan Mockito para simular `ProductoRepository`.
+
+Escenarios cubiertos:
+
+- Obtener todos los productos.
+- Obtener un producto por ID.
+- Excepción cuando el producto no existe.
+- Crear producto.
+- Rechazar código duplicado.
+- Actualizar producto.
+- Rechazar código duplicado durante actualización.
+- Eliminar producto.
+
+Ejecutar:
+
+```powershell
+.\mvnw test
+```
+
+Resultado esperado:
+
+```text
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+---
+
+# Perfil de pruebas con H2
+
+Las pruebas usan H2 en memoria para no depender de PostgreSQL local ni de credenciales personales.
+
+Archivo:
+
+```text
+src/test/resources/application-test.properties
+```
+
+Configuración:
+
+```properties
+spring.datasource.url=jdbc:h2:mem:inventario_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=false
+spring.jpa.open-in-view=false
+```
+
+El perfil se activa con:
+
+```text
+@ActiveProfiles("test")
+```
+
+---
+
 # Docker
 
-El proyecto incluye un `Dockerfile` para compilar y ejecutar la aplicación utilizando contenedores.
-
-## Construir imagen Docker
-
-Desde la raíz del proyecto:
+Construir imagen:
 
 ```powershell
 docker build -t inventario-api .
 ```
 
-Verificar la imagen:
-
-```powershell
-docker images
-```
-
-Deberá aparecer:
-
-```text
-inventario-api
-```
-
----
-
-## Ejecutar contenedor Docker
-
-Si PostgreSQL se encuentra instalado directamente en Windows, desde Docker se utiliza:
-
-```text
-host.docker.internal
-```
-
-Ejemplo:
+Ejecutar contenedor conectado al PostgreSQL de Windows:
 
 ```powershell
 docker run --name inventario-api-container `
@@ -446,107 +364,116 @@ docker run --name inventario-api-container `
   inventario-api
 ```
 
-Después puede probarse:
-
-```text
-GET http://localhost:8080/api/productos
-```
-
----
-
-## Detener el contenedor
+Comandos útiles:
 
 ```powershell
 docker stop inventario-api-container
-```
-
-## Iniciar nuevamente el contenedor
-
-```powershell
 docker start inventario-api-container
-```
-
-## Eliminar el contenedor
-
-```powershell
 docker rm inventario-api-container
 ```
 
 ---
 
-# Integración continua local
+# Integración continua
 
-El proyecto cuenta con un workflow de GitHub Actions ubicado en:
+El workflow se encuentra en:
 
 ```text
 .github/workflows/ci.yml
 ```
 
-Este pipeline permite comprobar automáticamente que el proyecto puede compilarse y generar su imagen Docker correctamente.
-
-## Flujo del pipeline
+Flujo actual:
 
 ```text
-Código fuente
-    ↓
-Git
-    ↓
-GitHub Actions
-    ↓
+PostgreSQL temporal
+        ↓
 Java 21
-    ↓
+        ↓
 Maven
-    ↓
+        ↓
+Pruebas automáticas
+        ↓
 Compilación
-    ↓
+        ↓
 Docker Build
 ```
 
----
+El pipeline utiliza:
 
-## Workflow utilizado
+```bash
+./mvnw clean verify
+```
+
+La imagen Docker se construye únicamente si las pruebas pasan correctamente.
+
+## Workflow actual
 
 ```yaml
 name: CI Inventario API
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
+
   pull_request:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/inventario_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: inventario_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d inventario_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
 
       - name: Configurar Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
           cache: maven
 
       - name: Dar permisos a Maven Wrapper
         run: chmod +x mvnw
 
-      - name: Compilar proyecto
-        run: ./mvnw clean package -DskipTests
+      - name: Compilar y ejecutar pruebas
+        run: ./mvnw clean verify
 
       - name: Construir imagen Docker
         run: docker build -t inventario-api .
 ```
 
+La contraseña `postgres` del workflow pertenece únicamente al servicio PostgreSQL temporal de CI.
+
 ---
 
 # Ejecución local del pipeline con act
 
-`act` permite ejecutar GitHub Actions localmente utilizando Docker.
-
-## Instalar act en Windows
+Instalar:
 
 ```powershell
 winget install --id nektos.act -e
@@ -558,23 +485,15 @@ Verificar:
 act --version
 ```
 
-## Ejecutar pipeline
-
-Primero debe estar Docker Desktop iniciado.
-
-Después, desde la raíz del proyecto:
+Ejecutar:
 
 ```powershell
 act
 ```
 
-En la primera ejecución puede solicitar seleccionar una imagen. Para este proyecto puede utilizarse:
+Docker Desktop debe estar iniciado.
 
-```text
-Medium
-```
-
-Si todo funciona correctamente debe finalizar con:
+Una ejecución correcta termina con:
 
 ```text
 Job succeeded
@@ -582,45 +501,39 @@ Job succeeded
 
 ---
 
-# Git
+# Git y GitHub
 
-El proyecto utiliza Git para el control de versiones.
+Repositorio:
 
-Inicializar repositorio:
-
-```powershell
-git init
+```text
+https://github.com/alejandrooovz/API_para_Gestion_de_Inventarios.git
 ```
 
-Agregar archivos:
+Clonar:
+
+```powershell
+git clone https://github.com/alejandrooovz/API_para_Gestion_de_Inventarios.git
+```
+
+Guardar cambios:
 
 ```powershell
 git add .
-```
-
-Crear commit:
-
-```powershell
-git commit -m "Configuracion inicial API de Inventarios"
-```
-
-Verificar estado:
-
-```powershell
-git status
+git commit -m "Descripcion del cambio"
+git push
 ```
 
 ---
 
 # Diagrama de clases
 
-El proyecto incluye el archivo:
+Archivo:
 
 ```text
 diagrama-clases.puml
 ```
 
-El diagrama utiliza PlantUML y representa inicialmente:
+Actualmente representa:
 
 ```text
 Producto
@@ -636,85 +549,56 @@ Proveedor
 ProductoProveedor
 ```
 
-El diagrama general podrá ampliarse conforme se integren los demás módulos del sistema.
-
----
-
-# Estructura general del proyecto
-
-```text
-API_para_Gestion_de_Inventarios
-│
-├── .github
-│   └── workflows
-│       └── ci.yml
-│
-├── .mvn
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   └── sv.ues.inventarioapi
-│   │   │       ├── controller
-│   │   │       ├── exception
-│   │   │       ├── model
-│   │   │       ├── repository
-│   │   │       └── service
-│   │   │           └── impl
-│   │   └── resources
-│   │       └── application.properties
-│   └── test
-│
-├── .dockerignore
-├── .gitignore
-├── Dockerfile
-├── README.md
-├── diagrama-clases.puml
-├── mvnw
-├── mvnw.cmd
-└── pom.xml
-```
+El diagrama deberá ampliarse al integrar los módulos del resto del equipo.
 
 ---
 
 # Estado actual
 
-Actualmente se encuentra implementado y probado:
+Actualmente se encuentra implementado, documentado y probado:
 
 - Proyecto base Spring Boot.
-- Conexión con PostgreSQL.
-- Entidad Producto.
-- Repository de Producto.
-- Service de Producto.
-- Implementación del Service.
-- Controller de Producto.
-- CRUD completo.
+- Java 21 y Maven.
+- PostgreSQL.
+- Variables de entorno.
+- CRUD completo de Producto.
 - Validaciones.
 - Manejo global de excepciones.
-- Validación de código duplicado.
+- Validación de códigos duplicados.
 - Lombok.
-- Pruebas de endpoints mediante Postman.
-- Dockerfile.
-- Construcción de imagen Docker.
+- Pruebas manuales con Postman.
+- Dockerfile multi-stage.
+- Imagen Docker probada.
 - Ejecución de la API dentro de Docker.
-- Conexión desde Docker hacia PostgreSQL.
-- Git.
-- Workflow de GitHub Actions.
-- Ejecución local del workflow con act.
+- Git y GitHub.
+- GitHub Actions.
+- Ejecución local con act.
+- CI con pruebas automáticas.
+- PostgreSQL temporal en CI.
+- 8 pruebas unitarias de ProductoServiceImpl.
+- 1 prueba de contexto Spring Boot.
+- H2 en memoria para pruebas.
+- Perfil `test`.
 - Diagrama de clases inicial.
-- Documentación inicial.
+- JavaDoc y comentarios técnicos.
+- README actualizado.
 
 ---
 
-# Próximas integraciones
+# Trabajo pendiente de integración grupal
 
-El sistema puede ampliarse con:
+La base técnica y el módulo de productos están terminados.
 
-- Proveedores.
-- Relación Producto-Proveedor.
-- Entradas de inventario.
-- Salidas de inventario.
+Queda pendiente:
+
+- Integrar Proveedores.
+- Integrar Producto-Proveedor.
+- Integrar entradas de inventario.
+- Integrar salidas de inventario.
 - Actualización automática del stock.
-- Integración completa entre todos los módulos.
+- Pruebas de integración del sistema completo.
+- Actualizar el diagrama general.
+- Actualizar el README final cuando todos los módulos estén integrados.
 
 ---
 
