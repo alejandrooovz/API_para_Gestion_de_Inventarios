@@ -1,0 +1,104 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+
+package "Modelo" {
+
+    class Producto {
+        - id : Long
+        - codigo : String
+        - nombre : String
+        - descripcion : String
+        - precio : BigDecimal
+        - cantidadStock : Integer
+    }
+
+    class Proveedor {
+        - id : Long
+        - nombre : String
+        - contacto : String
+        - telefono : String
+        - email : String
+        - direccion : String
+        - NCR_empresa : String
+        - NIT_contribuyente : String
+        - activo : Boolean
+    }
+
+    class ProductoProveedor {
+        - productoId : Long
+        - proveedorId : Long
+    }
+}
+
+package "Servicios" {
+
+    interface ProductoService {
+        + obtenerTodos() : List<Producto>
+        + obtenerPorId(id : Long) : Producto
+        + crear(producto : Producto) : Producto
+        + actualizar(id : Long, producto : Producto) : Producto
+        + eliminar(id : Long) : void
+    }
+
+    class ProductoServiceImpl {
+        + obtenerTodos() : List<Producto>
+        + obtenerPorId(id : Long) : Producto
+        + crear(producto : Producto) : Producto
+        + actualizar(id : Long, producto : Producto) : Producto
+        + eliminar(id : Long) : void
+    }
+}
+
+package "Persistencia" {
+
+    interface ProductoRepository {
+        + existsByCodigo(codigo : String) : boolean
+        + existsByCodigoAndIdNot(codigo : String, id : Long) : boolean
+    }
+}
+
+package "Controladores" {
+
+    class ProductoController {
+        + obtenerTodos()
+        + obtenerPorId(id : Long)
+        + crear(producto : Producto)
+        + actualizar(id : Long, producto : Producto)
+        + eliminar(id : Long)
+    }
+}
+
+package "Excepciones" {
+
+    class ResourceNotFoundException
+    class DuplicateResourceException
+
+    class ErrorResponse {
+        - timestamp : LocalDateTime
+        - status : int
+        - error : String
+        - mensaje : String
+    }
+
+    class GlobalExceptionHandler {
+        + manejarResourceNotFound()
+        + manejarDuplicado()
+        + manejarValidaciones()
+    }
+}
+
+ProductoServiceImpl ..|> ProductoService
+
+ProductoController --> ProductoService
+ProductoServiceImpl --> ProductoRepository
+ProductoRepository --> Producto
+
+Producto "1" -- "0..*" ProductoProveedor
+Proveedor "1" -- "0..*" ProductoProveedor
+
+GlobalExceptionHandler --> ResourceNotFoundException
+GlobalExceptionHandler --> DuplicateResourceException
+GlobalExceptionHandler --> ErrorResponse
+
+@enduml
