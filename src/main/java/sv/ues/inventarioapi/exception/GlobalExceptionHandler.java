@@ -108,5 +108,28 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(error);
     }
+
+    /**
+     * Maneja los errores producidos cuando el stock es insuficiente
+     * para realizar una salida.
+     *
+     * @param ex excepción generada por stock insuficiente.
+     * @return respuesta HTTP 400 con información del error.
+     */
+    @ExceptionHandler(StockInsuficienteException.class)
+    public ResponseEntity<ErrorResponse> manejarStockInsuficiente(
+            StockInsuficienteException ex) {
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
 }
 
