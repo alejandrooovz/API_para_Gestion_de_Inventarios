@@ -11,6 +11,7 @@ import sv.ues.inventarioapi.exception.ResourceNotFoundException;
 import sv.ues.inventarioapi.model.Producto;
 import sv.ues.inventarioapi.repository.ProductoRepository;
 import sv.ues.inventarioapi.service.impl.ProductoServiceImpl;
+import java.util.HashSet;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -44,7 +45,8 @@ class ProductoServiceImplTest {
                 "Teclado",
                 "Teclado mecánico",
                 new BigDecimal("25.50"),
-                10
+                10,
+                new HashSet<>()
         );
     }
 
@@ -153,7 +155,8 @@ class ProductoServiceImplTest {
                 "Teclado actualizado",
                 "Nueva descripción",
                 new BigDecimal("30.00"),
-                20
+                20,
+                new HashSet<>()
         );
 
         when(productoRepository.findById(1L))
@@ -188,7 +191,8 @@ class ProductoServiceImplTest {
                 "Teclado",
                 "Descripción",
                 new BigDecimal("30.00"),
-                20
+                20,
+                new HashSet<>()
         );
 
         when(productoRepository.findById(1L))
