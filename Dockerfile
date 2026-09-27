@@ -1,35 +1,18 @@
-# -----------------------------
-# Etapa 1: compilación
-# -----------------------------
-# Se utiliza una imagen con JDK 21 para compilar la aplicación.
-FROM eclipse-temurin:21-jdk AS build
-
-# Directorio de trabajo dentro del contenedor.
+# Etapa 1: Construcción (Build)
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY pom.xml .
+# Descarga dependencias primero para aprovechar la caché de Docker
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Se copian todos los archivos del proyecto al contenedor.
-COPY . .
-
-# Se compila el proyecto con Maven Wrapper.
-# Se omiten las pruebas en esta etapa para generar el archivo JAR.
-RUN ./mvnw clean package -DskipTests
-
-# -----------------------------
-# Etapa 2: ejecución
-# -----------------------------
-# Se utiliza una imagen más ligera con JRE 21
-# porque ya no es necesario compilar la aplicación.
-FROM eclipse-temurin:21-jre
-
-# Directorio de trabajo de la aplicación.
+# Etapa 2: Ejecución (Runtime)
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-
-# Se copia únicamente el archivo JAR generado
-# en la etapa de compilación.
+# Copia solo el JAR generado
 COPY --from=build /app/target/*.jar app.jar
-
-# Puerto utilizado por Spring Boot.
+# Expone el puerto 
 EXPOSE 8080
-
-# Comando que se ejecuta al iniciar el contenedor.
+# Comando de arranque
 ENTRYPOINT ["java", "-jar", "app.jar"]

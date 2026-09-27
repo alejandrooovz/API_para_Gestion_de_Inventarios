@@ -549,9 +549,25 @@ Proveedor
 ProductoProveedor
 ```
 
-El diagrama deberá ampliarse al integrar los módulos del resto del equipo.
+# Diagrama casos de uso
 
----
+Archivo:
+
+```text
+diagrama-casos-de-uso.puml
+```
+
+Actualmente representa:
+
+```text
+  API de Inventarios
+  Gestionar Productos 
+  Gestionar Proveedores 
+  Registrar Entrada de Stock
+  Registrar Salida de Stock
+  Consultar Disponibilidad
+```
+
 
 # Estado actual
 
@@ -585,22 +601,23 @@ Actualmente se encuentra implementado, documentado y probado:
 
 ---
 
-# Trabajo pendiente de integración grupal
+# Despliegue en Kubernetes (Docker Desktop)
 
-La base técnica y el módulo de productos están terminados.
+### Requisitos
+- Docker Desktop con Kubernetes habilitado.
+- `kubectl` configurado (contexto `docker-desktop`).
 
-Queda pendiente:
+### Pasos
+1. Construir la imagen Docker:
+   ```bash
+   docker build -t inventario-api:latest .
 
-- Integrar Proveedores.
-- Integrar Producto-Proveedor.
-- Integrar entradas de inventario.
-- Integrar salidas de inventario.
-- Actualización automática del stock.
-- Pruebas de integración del sistema completo.
-- Actualizar el diagrama general.
-- Actualizar el README final cuando todos los módulos estén integrados.
+2. Acceder a la API
+  ```bash
+  kubectl port-forward service/inventario-service 8080:80
 
----
+3. Luego abrir en el navegador: 
+  http://localhost:8080/api/productos
 
 # Proyecto académico
 

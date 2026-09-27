@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+actor "Administrador" as admin
+actor "Sistema" as sistema
+
+rectangle "API de Inventarios" {
+  usecase "Gestionar Productos (CRUD)" as UC1
+  usecase "Gestionar Proveedores (CRUD)" as UC2
+  usecase "Registrar Entrada de Stock" as UC3
+  usecase "Registrar Salida de Stock" as UC4
+  usecase "Consultar Disponibilidad" as UC5
+}
+
+admin --> UC1
+admin --> UC2
+admin --> UC3
+admin --> UC4
+admin --> UC5
+
+UC3 --> sistema : Actualiza cantidad
+UC4 --> sistema : Actualiza cantidad
+@enduml

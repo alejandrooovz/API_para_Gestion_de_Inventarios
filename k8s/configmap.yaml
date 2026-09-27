@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventario-config
+data:
+  db_url: "jdbc:postgresql://host.docker.internal:5432/inventario_db"
+  db_username: "postgres"
+  db_driver: "org.postgresql.Driver"
