@@ -1,12 +1,12 @@
-# API para Gestión de Inventarios
+# API para Gestion de Inventarios
 
-Proyecto académico desarrollado en Java con Spring Boot para la gestión de inventarios.
+Proyecto academico desarrollado en Java con Spring Boot para la gestion de inventarios.
 
-La API permite administrar productos mediante operaciones CRUD y está preparada para integrarse con otros módulos del sistema, como proveedores, relaciones producto-proveedor y movimientos de inventario.
+La API administra productos y proveedores mediante operaciones CRUD, modela la relacion muchos a muchos entre ambos, y registra movimientos de inventario (entradas y salidas) que actualizan automaticamente el stock disponible de cada producto.
 
 ---
 
-## Tecnologías utilizadas
+## Tecnologias utilizadas
 
 - Java 21
 - Spring Boot 4.1.1
@@ -35,11 +35,11 @@ El proyecto utiliza una arquitectura por capas:
 
 ```text
 Controller
-    ↓
+    v
 Service
-    ↓
+    v
 Repository
-    ↓
+    v
 Base de datos
 ```
 
@@ -47,38 +47,41 @@ Estructura principal:
 
 ```text
 src
-├── main
-│   ├── java
-│   │   └── sv
-│   │       └── ues
-│   │           └── inventarioapi
-│   │               ├── controller
-│   │               ├── exception
-│   │               ├── model
-│   │               ├── repository
-│   │               ├── service
-│   │               │   └── impl
-│   │               └── ApiParaGestionDeInventariosApplication.java
-│   └── resources
-│       └── application.properties
-│
-└── test
-    ├── java
-    │   └── sv
-    │       └── ues
-    │           └── inventarioapi
-    │               ├── ApiParaGestionDeInventariosApplicationTests.java
-    │               └── service
-    │                   └── ProductoServiceImplTest.java
-    └── resources
-        └── application-test.properties
++-- main
+|   +-- java
+|   |   +-- sv
+|   |       +-- ues
+|   |           +-- inventarioapi
+|   |               +-- controller
+|   |               +-- dto
+|   |               +-- exception
+|   |               +-- model
+|   |               +-- repository
+|   |               +-- service
+|   |               |   +-- impl
+|   |               +-- ApiParaGestionDeInventariosApplication.java
+|   +-- resources
+|       +-- application.properties
+|
++-- test
+    +-- java
+    |   +-- sv
+    |       +-- ues
+    |           +-- inventarioapi
+    |               +-- ApiParaGestionDeInventariosApplicationTests.java
+    |               +-- service
+    |                   +-- ProductoServiceImplTest.java
+    |                   +-- ProveedorServiceImplTest.java
+    |                   +-- MovimientoStockServiceImplTest.java
+    +-- resources
+        +-- application-test.properties
 ```
 
 ---
 
-# Módulo de Productos
+# Modulo de Productos
 
-Actualmente se encuentra implementado el módulo principal de productos.
+Implementado, documentado y probado.
 
 La entidad `Producto` contiene los siguientes atributos:
 
@@ -89,20 +92,90 @@ nombre
 descripcion
 precio
 cantidadStock
+proveedores (relacion ManyToMany con Proveedor)
 ```
 
 ## Validaciones de Producto
 
-- El código es obligatorio.
-- El código no puede superar los 50 caracteres.
-- El código debe ser único.
+- El codigo es obligatorio.
+- El codigo no puede superar los 50 caracteres.
+- El codigo debe ser unico.
 - El nombre es obligatorio.
 - El nombre no puede superar los 100 caracteres.
-- La descripción no puede superar los 255 caracteres.
+- La descripcion no puede superar los 255 caracteres.
 - El precio es obligatorio.
 - El precio debe ser mayor que cero.
 - La cantidad de stock es obligatoria.
 - La cantidad de stock no puede ser negativa.
+
+---
+
+# Modulo de Proveedores
+
+Implementado, documentado y probado.
+
+La entidad `Proveedor` contiene los siguientes atributos:
+
+```text
+id
+nombre
+contacto
+telefono
+email
+direccion
+ncrEmpresa
+nitContribuyente
+activo
+productos (relacion ManyToMany con Producto)
+```
+
+## Validaciones de Proveedor
+
+- El nombre es obligatorio (maximo 150 caracteres).
+- El email es obligatorio y debe tener formato valido.
+- La direccion es obligatoria (maximo 255 caracteres).
+- El NCR de la empresa es obligatorio y unico.
+- El NIT del contribuyente es obligatorio y unico.
+- El contacto y el telefono son opcionales.
+
+## Relacion Producto-Proveedor
+
+La relacion muchos a muchos entre `Producto` y `Proveedor` se materializa en la tabla intermedia `producto_proveedor`, generada automaticamente por JPA mediante `@JoinTable` en la entidad `Producto`.
+
+## Baja logica (soft delete)
+
+Un proveedor no se elimina fisicamente de la base de datos. Al invocar el endpoint de baja, su campo `activo` cambia a `false`, preservando el historial y evitando perder la trazabilidad con productos ya asociados.
+
+---
+
+# Modulo de Movimientos de Stock
+
+Implementado, documentado y probado.
+
+La entidad `MovimientoStock` contiene los siguientes atributos:
+
+```text
+id
+tipoMovimiento (ENTRADA o SALIDA)
+cantidad
+fechaMovimiento
+producto (referencia al Producto afectado)
+```
+
+## Logica de negocio
+
+Cada vez que se registra un movimiento, el sistema actualiza automaticamente el stock del producto asociado dentro de la misma transaccion (`@Transactional`):
+
+- **ENTRADA**: el stock del producto aumenta en la cantidad indicada.
+- **SALIDA**: el sistema valida que exista stock suficiente antes de disminuirlo. Si la cantidad solicitada supera el stock disponible, la operacion se rechaza y no se guarda ningun cambio.
+
+Si no se envia una fecha en la solicitud, el sistema la asigna automaticamente con la fecha y hora actuales.
+
+## Validaciones de MovimientoStock
+
+- El tipo de movimiento es obligatorio (`ENTRADA` o `SALIDA`).
+- La cantidad es obligatoria y debe ser mayor que 0.
+- El producto referenciado debe existir; si no, la operacion se rechaza.
 
 ---
 
@@ -138,7 +211,7 @@ Ejemplo:
 {
   "codigo": "PROD-001",
   "nombre": "Producto de ejemplo",
-  "descripcion": "Descripción del producto",
+  "descripcion": "Descripcion del producto",
   "precio": 10.50,
   "cantidadStock": 15
 }
@@ -176,23 +249,157 @@ Respuesta esperada:
 
 ---
 
+# Endpoints de Proveedores
+
+URL base:
+
+```text
+http://localhost:8080/api/proveedores
+```
+
+## Obtener todos los proveedores
+
+```http
+GET /api/proveedores
+```
+
+## Obtener proveedor por ID
+
+```http
+GET /api/proveedores/{id}
+```
+
+## Crear proveedor
+
+```http
+POST /api/proveedores
+```
+
+Ejemplo:
+
+```json
+{
+  "nombre": "Distribuidora de papel de oficina",
+  "contacto": "Raul Beltran",
+  "telefono": "2522 0001",
+  "email": "ventas@distribuidorapapel.com",
+  "direccion": "Avenida Revolucion, San Salvador Centro",
+  "ncrEmpresa": "1234-0",
+  "nitContribuyente": "0614-000001-120-0"
+}
+```
+
+Respuesta esperada:
+
+```text
+201 Created
+```
+
+## Actualizar proveedor
+
+```http
+PUT /api/proveedores/{id}
+```
+
+Respuesta esperada:
+
+```text
+200 OK
+```
+
+## Inactivar proveedor (baja logica)
+
+```http
+DELETE /api/proveedores/{id}
+```
+
+Respuesta esperada:
+
+```text
+204 No Content
+```
+
+---
+
+# Endpoints de Movimientos de Stock
+
+URL base:
+
+```text
+http://localhost:8080/api/movimientos-stock
+```
+
+## Registrar un movimiento (entrada o salida)
+
+```http
+POST /api/movimientos-stock
+```
+
+Ejemplo (entrada):
+
+```json
+{
+  "tipoMovimiento": "ENTRADA",
+  "cantidad": 20,
+  "producto": { "id": 1 }
+}
+```
+
+Ejemplo (salida):
+
+```json
+{
+  "tipoMovimiento": "SALIDA",
+  "cantidad": 5,
+  "producto": { "id": 1 }
+}
+```
+
+Respuesta esperada:
+
+```text
+201 Created
+```
+
+Si la salida solicitada supera el stock disponible, el sistema responde con:
+
+```text
+400 Bad Request
+```
+
+## Consultar historial de movimientos
+
+```http
+GET /api/movimientos-stock
+```
+
+Respuesta esperada:
+
+```text
+200 OK
+```
+
+---
+
 # Manejo de errores
 
 El proyecto utiliza manejo global de excepciones mediante `@ControllerAdvice`.
 
 Se manejan:
 
-- Producto no encontrado.
-- Código de producto duplicado.
-- Datos inválidos.
+- Recurso no encontrado (producto, proveedor o movimiento).
+- Codigo de producto duplicado.
+- NIT o NCR de proveedor duplicado.
+- Stock insuficiente al registrar una salida.
+- Datos invalidos.
 - Validaciones de campos.
 
-Códigos principales:
+Codigos principales:
 
 ```text
-400 Bad Request
-404 Not Found
-409 Conflict
+400 Bad Request   (validaciones y stock insuficiente)
+404 Not Found     (recurso no encontrado)
+409 Conflict      (duplicados)
 ```
 
 ---
@@ -210,7 +417,7 @@ Puerto: 5432
 
 # Variables de entorno
 
-La aplicación utiliza:
+La aplicacion utiliza:
 
 ```text
 DB_URL
@@ -223,10 +430,10 @@ Ejemplo:
 ```text
 DB_URL=jdbc:postgresql://localhost:5432/inventario_db
 DB_USERNAME=postgres
-DB_PASSWORD=TU_CONTRASEÑA
+DB_PASSWORD=TU_CONTRASENA
 ```
 
-No se recomienda guardar contraseñas reales dentro del repositorio.
+No se recomienda guardar contrasenas reales dentro del repositorio.
 
 ## application.properties
 
@@ -244,7 +451,7 @@ spring.jpa.properties.hibernate.format_sql=true
 
 ---
 
-# Ejecución local
+# Ejecucion local
 
 ## Desde IntelliJ IDEA
 
@@ -270,7 +477,7 @@ Windows:
 .\mvnw spring-boot:run
 ```
 
-Linux:
+Linux / Chromebook (Crostini):
 
 ```bash
 ./mvnw spring-boot:run
@@ -278,37 +485,60 @@ Linux:
 
 ---
 
-# Pruebas automáticas
+# Pruebas automaticas
 
 El proyecto incluye:
 
 - 8 pruebas unitarias para `ProductoServiceImpl`.
+- 11 pruebas unitarias para `ProveedorServiceImpl`.
+- 5 pruebas unitarias para `MovimientoStockServiceImpl`.
 - 1 prueba de carga del contexto de Spring Boot.
-- Total: 9 pruebas automatizadas.
+- Total: 25 pruebas automatizadas.
 
-Las pruebas unitarias utilizan Mockito para simular `ProductoRepository`.
+Las pruebas unitarias utilizan Mockito para simular los repositorios.
 
-Escenarios cubiertos:
+Escenarios cubiertos (Producto):
 
 - Obtener todos los productos.
 - Obtener un producto por ID.
-- Excepción cuando el producto no existe.
+- Excepcion cuando el producto no existe.
 - Crear producto.
-- Rechazar código duplicado.
+- Rechazar codigo duplicado.
 - Actualizar producto.
-- Rechazar código duplicado durante actualización.
+- Rechazar codigo duplicado durante actualizacion.
 - Eliminar producto.
+
+Escenarios cubiertos (Proveedor):
+
+- Obtener todos los proveedores.
+- Obtener un proveedor por ID.
+- Excepcion cuando el proveedor no existe.
+- Crear proveedor.
+- Rechazar NIT duplicado.
+- Rechazar NCR duplicado.
+- Actualizar proveedor.
+- Rechazar NIT perteneciente a otro proveedor durante actualizacion.
+- Inactivar proveedor (baja logica).
+- Excepcion al inactivar un proveedor inexistente.
+
+Escenarios cubiertos (Movimiento de Stock):
+
+- Registrar entrada y aumentar el stock del producto.
+- Registrar salida y disminuir el stock del producto.
+- Rechazar salida cuando el stock es insuficiente.
+- Excepcion cuando el producto referenciado no existe.
+- Obtener el historial de movimientos.
 
 Ejecutar:
 
-```powershell
-.\mvnw test
+```bash
+./mvnw test
 ```
 
 Resultado esperado:
 
 ```text
-Tests run: 9, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
@@ -324,7 +554,7 @@ Archivo:
 src/test/resources/application-test.properties
 ```
 
-Configuración:
+Configuracion:
 
 ```properties
 spring.datasource.url=jdbc:h2:mem:inventario_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
@@ -349,7 +579,7 @@ El perfil se activa con:
 
 Construir imagen:
 
-```powershell
+```bash
 docker build -t inventario-api .
 ```
 
@@ -360,13 +590,13 @@ docker run --name inventario-api-container `
   -p 8080:8080 `
   -e DB_URL=jdbc:postgresql://host.docker.internal:5432/inventario_db `
   -e DB_USERNAME=postgres `
-  -e DB_PASSWORD=TU_CONTRASEÑA `
+  -e DB_PASSWORD=TU_CONTRASENA `
   inventario-api
 ```
 
-Comandos útiles:
+Comandos utiles:
 
-```powershell
+```bash
 docker stop inventario-api-container
 docker start inventario-api-container
 docker rm inventario-api-container
@@ -374,7 +604,7 @@ docker rm inventario-api-container
 
 ---
 
-# Integración continua
+# Integracion continua
 
 El workflow se encuentra en:
 
@@ -386,15 +616,15 @@ Flujo actual:
 
 ```text
 PostgreSQL temporal
-        ↓
+        v
 Java 21
-        ↓
+        v
 Maven
-        ↓
-Pruebas automáticas
-        ↓
-Compilación
-        ↓
+        v
+Pruebas automaticas
+        v
+Compilacion
+        v
 Docker Build
 ```
 
@@ -404,74 +634,11 @@ El pipeline utiliza:
 ./mvnw clean verify
 ```
 
-La imagen Docker se construye únicamente si las pruebas pasan correctamente.
-
-## Workflow actual
-
-```yaml
-name: CI Inventario API
-
-on:
-  push:
-    branches:
-      - main
-      - master
-
-  pull_request:
-    branches:
-      - main
-      - master
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    env:
-      DB_URL: jdbc:postgresql://localhost:5432/inventario_db
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-
-    services:
-      postgres:
-        image: postgres:18
-        env:
-          POSTGRES_DB: inventario_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U postgres -d inventario_db"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    steps:
-      - name: Descargar código
-        uses: actions/checkout@v4
-
-      - name: Configurar Java 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Dar permisos a Maven Wrapper
-        run: chmod +x mvnw
-
-      - name: Compilar y ejecutar pruebas
-        run: ./mvnw clean verify
-
-      - name: Construir imagen Docker
-        run: docker build -t inventario-api .
-```
-
-La contraseña `postgres` del workflow pertenece únicamente al servicio PostgreSQL temporal de CI.
+La imagen Docker se construye unicamente si las pruebas pasan correctamente.
 
 ---
 
-# Ejecución local del pipeline con act
+# Ejecucion local del pipeline con act
 
 Instalar:
 
@@ -493,7 +660,7 @@ act
 
 Docker Desktop debe estar iniciado.
 
-Una ejecución correcta termina con:
+Una ejecucion correcta termina con:
 
 ```text
 Job succeeded
@@ -511,13 +678,13 @@ https://github.com/alejandrooovz/API_para_Gestion_de_Inventarios.git
 
 Clonar:
 
-```powershell
+```bash
 git clone https://github.com/alejandrooovz/API_para_Gestion_de_Inventarios.git
 ```
 
 Guardar cambios:
 
-```powershell
+```bash
 git add .
 git commit -m "Descripcion del cambio"
 git push
@@ -533,7 +700,7 @@ Archivo:
 diagrama-clases.puml
 ```
 
-Actualmente representa:
+Representa los tres modulos integrados:
 
 ```text
 Producto
@@ -541,15 +708,28 @@ ProductoController
 ProductoService
 ProductoServiceImpl
 ProductoRepository
+
+Proveedor
+ProveedorController
+ProveedorService
+ProveedorServiceImpl
+ProveedorRepository
+ProveedorRequestDTO
+ProveedorResponseDTO
+
+MovimientoStock
+TipoMovimiento
+MovimientoStockController
+MovimientoStockService
+MovimientoStockServiceImpl
+MovimientoStockRepository
+
 ResourceNotFoundException
 DuplicateResourceException
+StockInsuficienteException
 GlobalExceptionHandler
 ErrorResponse
-Proveedor
-ProductoProveedor
 ```
-
-El diagrama deberá ampliarse al integrar los módulos del resto del equipo.
 
 ---
 
@@ -562,50 +742,52 @@ Actualmente se encuentra implementado, documentado y probado:
 - PostgreSQL.
 - Variables de entorno.
 - CRUD completo de Producto.
-- Validaciones.
+- CRUD completo de Proveedor.
+- Relacion ManyToMany entre Producto y Proveedor (tabla producto_proveedor).
+- Baja logica de Proveedor (campo activo).
+- DTOs de request/response para Proveedor.
+- Registro de movimientos de stock (entradas y salidas).
+- Actualizacion automatica del stock a partir de los movimientos.
+- Validacion de stock insuficiente antes de una salida.
+- Validaciones con Jakarta Validation.
 - Manejo global de excepciones.
-- Validación de códigos duplicados.
+- Validacion de datos duplicados (codigo, NIT, NCR).
 - Lombok.
 - Pruebas manuales con Postman.
 - Dockerfile multi-stage.
 - Imagen Docker probada.
-- Ejecución de la API dentro de Docker.
-- Git y GitHub.
+- Ejecucion de la API dentro de Docker.
+- Git y GitHub, con flujo de Pull Requests.
 - GitHub Actions.
-- Ejecución local con act.
-- CI con pruebas automáticas.
+- Ejecucion local con act.
+- CI con pruebas automaticas.
 - PostgreSQL temporal en CI.
-- 8 pruebas unitarias de ProductoServiceImpl.
+- 25 pruebas unitarias en total (Producto + Proveedor + Movimiento de Stock).
 - 1 prueba de contexto Spring Boot.
 - H2 en memoria para pruebas.
 - Perfil `test`.
-- Diagrama de clases inicial.
-- JavaDoc y comentarios técnicos.
+- Diagrama de clases con los tres modulos.
+- JavaDoc y comentarios tecnicos.
 - README actualizado.
 
 ---
 
-# Trabajo pendiente de integración grupal
+# Trabajo pendiente de integracion grupal
 
-La base técnica y el módulo de productos están terminados.
+La base tecnica y los tres modulos (Producto, Proveedor, Movimiento de Stock) estan integrados en `main`.
 
 Queda pendiente:
 
-- Integrar Proveedores.
-- Integrar Producto-Proveedor.
-- Integrar entradas de inventario.
-- Integrar salidas de inventario.
-- Actualización automática del stock.
-- Pruebas de integración del sistema completo.
-- Actualizar el diagrama general.
-- Actualizar el README final cuando todos los módulos estén integrados.
+- Agregar DTOs de request/response para Movimiento de Stock, actualmente el endpoint recibe la entidad directamente.
+- Pruebas de integracion end-to-end del sistema completo (por ejemplo, con `@SpringBootTest` y `MockMvc`).
+- Revision final del README y del diagrama antes de la entrega.
 
 ---
 
-# Proyecto académico
+# Proyecto academico
 
-Proyecto desarrollado como parte de la asignatura de Programación Orientada a Objetos.
+Proyecto desarrollado como parte de la asignatura de Programacion Orientada a Objetos.
 
 Universidad de El Salvador.
 
-## API para Gestión de Inventarios
+## API para Gestion de Inventarios
