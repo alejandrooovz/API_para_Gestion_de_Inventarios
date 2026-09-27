@@ -786,10 +786,14 @@ Queda pendiente:
 
 ---
 
-# Proyecto academico
+# Proyecto academico API para Gestion de Inventarios 
 
-Proyecto desarrollado como parte de la asignatura de Programacion Orientada a Objetos.
-
+Proyecto desarrollado como parte de la asignatura de Programación Orientada a Objetos.  
 Universidad de El Salvador.
 
-## API para Gestion de Inventarios
+## Integrantes
+
+* **Ramos Martínez, Roberto Ernesto** — `RM04123`
+* **Hernández Belloso, Kevin Daniel** — `HH25003`
+* **Quintana Vásquez, Danilo Alejandro** — `QV22002`
+* **Segovia Romero, Javier de Jesús** — `SR22025`
