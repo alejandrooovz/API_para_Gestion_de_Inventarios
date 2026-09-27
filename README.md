@@ -694,6 +694,8 @@ git push
 
 # Diagrama de clases
 
+<img width="2117" height="800" alt="diagrama-clases" src="https://github.com/user-attachments/assets/2f545f7b-8150-4c0d-91f2-27cb6c94230e" />
+
 Archivo:
 
 ```text
