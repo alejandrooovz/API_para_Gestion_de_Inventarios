@@ -8,7 +8,7 @@ La API administra productos y proveedores mediante operaciones CRUD, modela la r
 
 ## Tecnologias utilizadas
 
-- Java 21
+- Java 25
 - Spring Boot 4.1.1
 - Spring Data JPA
 - Spring Validation
@@ -617,7 +617,7 @@ Flujo actual:
 ```text
 PostgreSQL temporal
         v
-Java 21
+Java 25
         v
 Maven
         v
@@ -740,7 +740,7 @@ ErrorResponse
 Actualmente se encuentra implementado, documentado y probado:
 
 - Proyecto base Spring Boot.
-- Java 21 y Maven.
+- Java 25 y Maven.
 - PostgreSQL.
 - Variables de entorno.
 - CRUD completo de Producto.
@@ -771,18 +771,6 @@ Actualmente se encuentra implementado, documentado y probado:
 - Diagrama de clases con los tres modulos.
 - JavaDoc y comentarios tecnicos.
 - README actualizado.
-
----
-
-# Trabajo pendiente de integracion grupal
-
-La base tecnica y los tres modulos (Producto, Proveedor, Movimiento de Stock) estan integrados en `main`.
-
-Queda pendiente:
-
-- Agregar DTOs de request/response para Movimiento de Stock, actualmente el endpoint recibe la entidad directamente.
-- Pruebas de integracion end-to-end del sistema completo (por ejemplo, con `@SpringBootTest` y `MockMvc`).
-- Revision final del README y del diagrama antes de la entrega.
 
 ---
 
