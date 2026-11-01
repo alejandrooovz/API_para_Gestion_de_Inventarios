@@ -1,5 +1,5 @@
 # Etapa 1: Construcción (Build)
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM maven:3.9.16-eclipse-temurin-25 AS build
 WORKDIR /app
 COPY pom.xml .
 # Descarga dependencias primero para aprovechar la caché de Docker
@@ -8,7 +8,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecución (Runtime)
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 # Copia solo el JAR generado
 COPY --from=build /app/target/*.jar app.jar

@@ -474,7 +474,7 @@ ApiParaGestionDeInventariosApplication.java
 Windows:
 
 ```powershell
-.\mvnw spring-boot:run
+.\mvn spring-boot:run
 ```
 
 Linux / Chromebook (Crostini):
